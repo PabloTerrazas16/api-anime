@@ -21,7 +21,7 @@ jobs:
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
-      TF_VAR_project_name: docker-testing
+      TF_VAR_project_name: api-anime
       TF_VAR_cluster_name: docker-testing-eks
 
     steps:
@@ -54,7 +54,7 @@ jobs:
       - name: Ensure ECR repositories exist
         working-directory: terraform
         run: |
-          if ! aws ecr describe-repositories --repository-names docker-testing-api >/dev/null 2>&1; then
+          if ! aws ecr describe-repositories --repository-names api-anime-api >/dev/null 2>&1; then
             terraform apply -auto-approve \
               -target=aws_ecr_repository.api \
               -target=aws_ecr_repository.frontend
@@ -64,8 +64,8 @@ jobs:
         id: image-vars
         run: |
           ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-          echo "api_repo=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/docker-testing-api" >> "$GITHUB_OUTPUT"
-          echo "frontend_repo=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/docker-testing-frontend" >> "$GITHUB_OUTPUT"
+          echo "api_repo=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/api-anime-api" >> "$GITHUB_OUTPUT"
+          echo "frontend_repo=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/api-anime-frontend" >> "$GITHUB_OUTPUT"
           echo "tag=${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
 
       - name: Build API image

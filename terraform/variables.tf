@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Nombre del proyecto usado en etiquetas y recursos"
   type        = string
-  default     = "docker-testing"
+  default     = "api-anime"
 }
 
 variable "aws_region" {
