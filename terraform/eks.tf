@@ -17,12 +17,6 @@ resource "aws_eks_cluster" "main" {
   ]
 
   tags = local.common_tags
-
-  depends_on = [
-    aws_cloudwatch_log_group.eks_cluster,
-    aws_iam_role_policy_attachment.lab_role_cluster,
-    aws_iam_role_policy_attachment.lab_role_vpc_controller
-  ]
 }
 
 resource "aws_eks_node_group" "main" {
@@ -40,10 +34,4 @@ resource "aws_eks_node_group" "main" {
   }
 
   tags = local.common_tags
-
-  depends_on = [
-    aws_iam_role_policy_attachment.lab_role_worker,
-    aws_iam_role_policy_attachment.lab_role_cni,
-    aws_iam_role_policy_attachment.lab_role_ecr_readonly
-  ]
 }
