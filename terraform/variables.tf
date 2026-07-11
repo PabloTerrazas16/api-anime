@@ -12,7 +12,7 @@ variable "aws_region" {
 variable "cluster_name" {
   description = "Nombre del cluster EKS"
   type        = string
-  default     = "docker-testing-eks"
+  default     = "api-anime-eks"
 }
 
 variable "cluster_version" {

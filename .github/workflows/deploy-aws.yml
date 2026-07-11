@@ -22,7 +22,7 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
       TF_VAR_project_name: api-anime
-      TF_VAR_cluster_name: docker-testing-eks
+      TF_VAR_cluster_name: api-anime-eks
 
     steps:
       - name: Checkout code

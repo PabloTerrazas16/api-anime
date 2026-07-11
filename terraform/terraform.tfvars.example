@@ -1,6 +1,6 @@
 aws_region         = "us-east-1"
 project_name       = "api-anime"
-cluster_name       = "docker-testing-eks"
+cluster_name       = "api-anime-eks"
 cluster_version    = "1.29"
 node_instance_type = "t3.small"
 desired_nodes      = 2
