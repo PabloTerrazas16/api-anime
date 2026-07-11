@@ -72,8 +72,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: snyk-scan
     env:
-      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || 'unidasp-1_docker-testing' }}
-      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION || 'unidasp-1' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -81,19 +81,44 @@ jobs:
           fetch-depth: 0
 
       - name: Validate SonarCloud configuration
+        id: sonar_check
         run: |
           if [ -z "${SONAR_TOKEN}" ]; then
-            echo "Missing SONAR_TOKEN secret. Configure it in repository Secrets and variables > Actions."
-            exit 1
+            echo "SONAR_TOKEN secret is missing. Skipping Sonar scan."
+            echo "run_scan=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ -z "${SONAR_PROJECT_KEY}" ] || [ -z "${SONAR_ORGANIZATION}" ]; then
+            echo "SONAR_PROJECT_KEY or SONAR_ORGANIZATION variable is missing. Skipping Sonar scan."
+            echo "run_scan=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           echo "Using Sonar project key: ${SONAR_PROJECT_KEY}"
           echo "Using Sonar organization: ${SONAR_ORGANIZATION}"
+
+          STATUS=$(curl -s -o /tmp/sonar_component.json -w "%{http_code}" \
+            -u "${SONAR_TOKEN}:" \
+            "https://sonarcloud.io/api/components/show?component=${SONAR_PROJECT_KEY}")
+
+          if [ "${STATUS}" != "200" ]; then
+            echo "Sonar token/project validation failed with HTTP ${STATUS}. Skipping Sonar scan."
+            echo "run_scan=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "run_scan=true" >> "$GITHUB_OUTPUT"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: SonarCloud Scan skipped
+        if: steps.sonar_check.outputs.run_scan != 'true'
+        run: echo "Skipping SonarCloud analysis because token, organization, or project key is not valid for this repository."
+
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        if: steps.sonar_check.outputs.run_scan == 'true'
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
