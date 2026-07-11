@@ -148,10 +148,10 @@ jobs:
       - name: Print external endpoints
         run: |
           echo "Getting external endpoints..."
-          
+
           FRONTEND_HOST=$(kubectl get svc mi-front -n docker-testing \
             -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{.status.loadBalancer.ingress[0].ip}')
-          
+
           GRAFANA_HOST=$(kubectl get svc kube-prometheus-stack-grafana -n monitoring \
             -o jsonpath='{.status.loadBalancer.ingress[0].hostname}{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
 
