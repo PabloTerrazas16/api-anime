@@ -1,0 +1,90 @@
+name: Bun & Docker DevSecOps Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+
+      - name: Install dependencies
+        run: |
+          cd mi-api && bun install
+          cd ../mi-front && bun install
+
+      - name: Run Unit Tests
+        run: |
+          cd mi-api
+          bun test
+
+  snyk-scan:
+    name: Snyk Security & Container Scan
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: |
+          cd mi-api && bun install
+          cd ../mi-front && bun install
+
+      - name: Install Snyk CLI
+        run: npm install -g snyk
+
+      - name: Authenticate Snyk CLI
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: snyk auth $SNYK_TOKEN
+
+      - name: Scan API & Frontend
+        run: |
+          snyk test --file=mi-api/package.json --severity-threshold=high || true
+          snyk test --file=mi-front/package.json --severity-threshold=high || true
+
+      - name: Build Docker Images
+        run: docker compose build
+      
+      - name: Snyk Container Scan API
+        run: snyk container test docker-testing-app --severity-threshold=high || true
+
+  sonar-analysis:
+    name: SonarCloud Analysis
+    runs-on: ubuntu-latest
+    needs: snyk-scan
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=unidasp-1_docker-testing
+            -Dsonar.organization=unidasp-1
+            -Dsonar.sources=mi-api/src,mi-front
+            -Dsonar.javascript.environments=browser,node
+            -Dsonar.exclusions=**/node_modules/**,**/bun.lock

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Ok</title>
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 40px auto;
+      line-height: 1.6;
+      padding: 0 16px;
+    }
+
+    h1,
+    h2 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: monospace;
+    }
+
+    input,
+    button {
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+
+    img {
+      margin-top: 12px;
+      border-radius: 8px;
+      max-width: 200px;
+    }
+
+    .result {
+      margin-top: 16px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2> Esto usa Jikan y AniList, es meramente para probar dockers. v2</h2>
+
+  <p>Busca algun anime:</p>
+
+  <input id="search" placeholder="Ej: Naruto">
+  <button onclick="buscar()">Buscar</button>
+
+  <h2>Request</h2>
+  <pre><code id="request">GET /api/anime?q=Naruto</code></pre>
+
+  <h2>Response</h2>
+  <pre><code id="response">...</code></pre>
+
+  <div class="result" id="render"></div>
+
+<script>
+  function limpiarHTML(html) {
+    return html.replace(/<[^>]*>?/gm, "");
+  }
+
+  async function buscar() {
+    const q = document.getElementById("search").value || "Naruto";
+
+    const url = `/api/anime?q=${encodeURIComponent(q)}`;
+    document.getElementById("request").innerText = `GET ${url}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    document.getElementById("response").innerText =
+      JSON.stringify(data, null, 2);
+
+    if (data.error) {
+      document.getElementById("render").innerHTML = `
+        <p>${data.error}</p>
+      `;
+      return;
+    }
+
+    document.getElementById("render").innerHTML = `
+      <h2>${data.title}</h2>
+      <img src="${data.image}" />
+      <p>${limpiarHTML(data.description || "")}</p>
+      <p><strong>Score:</strong> ${data.score ?? "N/A"}</p>
+      <p><strong>Source:</strong> ${data.source}</p>
+    `;
+  }
+</script>
+</body>
+
+</html>
