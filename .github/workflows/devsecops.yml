@@ -55,14 +55,11 @@ jobs:
           SNYK_AUTH_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Run Snyk Open Source Test
-        run: snyk test --severity-threshold=high
+        run: |
+          snyk test --file=mi-api/package.json --severity-threshold=high
+          snyk test --file=mi-front/package.json --severity-threshold=high
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Scan API & Frontend
-        run: |
-          snyk test --file=mi-api/package.json --severity-threshold=high || true
-          snyk test --file=mi-front/package.json --severity-threshold=high || true
 
       - name: Build Docker Images
         run: docker compose build
